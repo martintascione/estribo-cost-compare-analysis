@@ -217,43 +217,64 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
           <CardTitle>Análisis Detallado de Precios</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold">Medida</TableHead>
-                  <TableHead className="font-bold text-center">Peso (kg)</TableHead>
-                  <TableHead className="font-bold text-center">Proveedor</TableHead>
-                  <TableHead className="font-bold text-center">Costo Base</TableHead>
-                  <TableHead className="font-bold text-center">Precio Sin IVA</TableHead>
-                  <TableHead className="font-bold text-center">Precio Con IVA</TableHead>
-                  <TableHead className="font-bold text-center">IVA</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calculos.map((calculo, index) => (
-                  <TableRow key={index} className="hover:bg-muted/50">
-                    <TableCell className="font-semibold">{calculo.estribo.medida}</TableCell>
-                    <TableCell className="text-center">{calculo.estribo.peso.toFixed(4)}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline">{calculo.proveedor.nombre}</Badge>
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {formatCurrency(calculo.costoBase)}
-                    </TableCell>
-                    <TableCell className="text-center font-medium text-primary">
-                      {formatCurrency(calculo.precioFinalSinIva)}
-                    </TableCell>
-                    <TableCell className="text-center font-bold text-success">
-                      {formatCurrency(calculo.precioFinalConIva)}
-                    </TableCell>
-                    <TableCell className="text-center text-warning">
-                      {formatCurrency(calculo.ivaAmount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="overflow-x-auto space-y-6">
+            {/* Agrupar por proveedor */}
+            {calculos.reduce((proveedoresUnicos, calculo) => {
+              if (!proveedoresUnicos.find(p => p.id === calculo.proveedor.id)) {
+                proveedoresUnicos.push(calculo.proveedor);
+              }
+              return proveedoresUnicos;
+            }, [] as any[]).map(proveedor => {
+              const calculosProveedor = calculos
+                .filter(c => c.proveedor.id === proveedor.id)
+                .sort((a, b) => a.estribo.medida.localeCompare(b.estribo.medida));
+
+              return (
+                <div key={proveedor.id} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-base px-3 py-1">
+                      {proveedor.nombre}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      ({formatCurrency(proveedor.precioPorKg)} por kg)
+                    </span>
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Medida</TableHead>
+                        <TableHead className="font-bold text-center">Peso (kg)</TableHead>
+                        <TableHead className="font-bold text-center">Costo Base</TableHead>
+                        <TableHead className="font-bold text-center">Precio Sin IVA</TableHead>
+                        <TableHead className="font-bold text-center">Precio Con IVA</TableHead>
+                        <TableHead className="font-bold text-center">IVA</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {calculosProveedor.map((calculo, index) => (
+                        <TableRow key={index} className="hover:bg-muted/50">
+                          <TableCell className="font-semibold">{calculo.estribo.medida}</TableCell>
+                          <TableCell className="text-center">{calculo.estribo.peso.toFixed(4)}</TableCell>
+                          <TableCell className="text-center font-medium">
+                            {formatCurrency(calculo.costoBase)}
+                          </TableCell>
+                          <TableCell className="text-center font-medium text-primary">
+                            {formatCurrency(calculo.precioFinalSinIva)}
+                          </TableCell>
+                          <TableCell className="text-center font-bold text-success">
+                            {formatCurrency(calculo.precioFinalConIva)}
+                          </TableCell>
+                          <TableCell className="text-center text-warning">
+                            {formatCurrency(calculo.ivaAmount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

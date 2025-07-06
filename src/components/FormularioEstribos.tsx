@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,23 +16,47 @@ interface Props {
 
 export const FormularioEstribos = ({ estribos, proveedores, onAgregarEstribo, onEliminarEstribo }: Props) => {
   const [medida, setMedida] = useState('');
-  const [pesoBase, setPesoBase] = useState('');
+  const [pesosPorProveedor, setPesosPorProveedor] = useState<{ [key: string]: string }>({});
+
+  // Inicializar pesos cuando cambien los proveedores
+  React.useEffect(() => {
+    const pesosIniciales: { [key: string]: string } = {};
+    proveedores.forEach(proveedor => {
+      pesosIniciales[proveedor.id] = pesosPorProveedor[proveedor.id] || '';
+    });
+    setPesosPorProveedor(pesosIniciales);
+  }, [proveedores]);
+
+  const handlePesoChange = (proveedorId: string, valor: string) => {
+    setPesosPorProveedor(prev => ({
+      ...prev,
+      [proveedorId]: valor
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (medida && pesoBase) {
-      // Crear pesosPorProveedor con el mismo peso base para todos los proveedores
-      const pesosPorProveedor: { [key: string]: number } = {};
+    const todosLosPesosCompletos = proveedores.every(proveedor => 
+      pesosPorProveedor[proveedor.id] && parseFloat(pesosPorProveedor[proveedor.id]) > 0
+    );
+
+    if (medida && todosLosPesosCompletos) {
+      const pesosNumericos: { [key: string]: number } = {};
       proveedores.forEach(proveedor => {
-        pesosPorProveedor[proveedor.id] = parseFloat(pesoBase);
+        pesosNumericos[proveedor.id] = parseFloat(pesosPorProveedor[proveedor.id]);
       });
 
       onAgregarEstribo({
         medida,
-        pesosPorProveedor
+        pesosPorProveedor: pesosNumericos
       });
+      
       setMedida('');
-      setPesoBase('');
+      const pesosVacios: { [key: string]: string } = {};
+      proveedores.forEach(proveedor => {
+        pesosVacios[proveedor.id] = '';
+      });
+      setPesosPorProveedor(pesosVacios);
     }
   };
 
@@ -46,7 +71,7 @@ export const FormularioEstribos = ({ estribos, proveedores, onAgregarEstribo, on
       <CardContent className="space-y-6">
         {/* Formulario para agregar estribo */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="medida">Medida</Label>
               <Input
@@ -57,19 +82,29 @@ export const FormularioEstribos = ({ estribos, proveedores, onAgregarEstribo, on
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="peso">Peso Base (kg)</Label>
-              <Input
-                id="peso"
-                type="number"
-                step="0.0001"
-                value={pesoBase}
-                onChange={(e) => setPesoBase(e.target.value)}
-                placeholder="Ej: 0.0350"
-                required
-              />
+            
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Peso por Proveedor (kg)</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {proveedores.map(proveedor => (
+                  <div key={proveedor.id} className="space-y-2">
+                    <Label htmlFor={`peso-${proveedor.id}`} className="text-sm text-muted-foreground">
+                      {proveedor.nombre}
+                    </Label>
+                    <Input
+                      id={`peso-${proveedor.id}`}
+                      type="number"
+                      step="0.0001"
+                      value={pesosPorProveedor[proveedor.id] || ''}
+                      onChange={(e) => handlePesoChange(proveedor.id, e.target.value)}
+                      placeholder="Ej: 0.0350"
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Se aplicará el mismo peso para todos los proveedores inicialmente
+                Ingrese el peso específico por cada proveedor para esta medida
               </p>
             </div>
           </div>
