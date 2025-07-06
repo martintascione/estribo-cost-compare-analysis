@@ -12,9 +12,13 @@ import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   calculos: CalculoDetallado[];
+  calculosPorUnidad?: any[];
 }
 
-export const ComparacionPrecios = ({ calculos }: Props) => {
+export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) => {
+  const [modoPorUnidad, setModoPorUnidad] = useState(false);
+  
+  const datosActuales = modoPorUnidad ? calculosPorUnidad : calculos;
   const [discriminarIva, setDiscriminarIva] = useState(false);
   
   // Agrupar por estribo para la comparación
@@ -295,9 +299,9 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                                 {formatCurrency(ivaCredito)}
                               </TableCell>
                             )}
-                            <TableCell className="text-center font-medium text-primary">
-                              {formatCurrency(calculo.precioFinalConIva)}
-                            </TableCell>
+                    <TableCell className="text-center font-medium text-primary">
+                      {formatCurrency(calculo.precioFinalConIva)}
+                    </TableCell>
                             {discriminarIva && (
                               <>
                                 <TableCell className="text-center text-orange-600">

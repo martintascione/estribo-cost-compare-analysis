@@ -19,6 +19,13 @@ export interface ConfiguracionVenta {
   iva: number; // porcentaje
 }
 
+export interface PrecioPorUnidad {
+  id: string;
+  estriboPrecioId: string;
+  medida: string;
+  precioUnitario: number;
+}
+
 export interface CalculoDetallado {
   estribo: Estribo & { peso: number }; // Incluye peso específico para el proveedor
   proveedor: Proveedor;
@@ -32,6 +39,7 @@ export interface CalculoDetallado {
 export const useEstribosData = () => {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [estribos, setEstribos] = useState<Estribo[]>([]);
+  const [preciosPorUnidad, setPreciosPorUnidad] = useState<PrecioPorUnidad[]>([]);
   const [configuracion, setConfiguracion] = useState<ConfiguracionVenta>({
     margenGanancia: 90,
     iva: 21
@@ -77,6 +85,18 @@ export const useEstribosData = () => {
       
       if (configError) throw configError;
       
+      // Cargar precios por unidad
+      const { data: preciosData, error: preciosError } = await supabase
+        .from('precios_por_unidad')
+        .select(`
+          *,
+          estribos!inner (
+            medida
+          )
+        `);
+      
+      if (preciosError && preciosError.code !== 'PGRST116') throw preciosError;
+      
       // Transformar datos
       const proveedoresTransformados: Proveedor[] = proveedoresData?.map(p => ({
         id: p.id,
@@ -93,8 +113,17 @@ export const useEstribosData = () => {
         }, {}) || {}
       })) || [];
       
+      // Transformar precios por unidad
+      const preciosTransformados: PrecioPorUnidad[] = preciosData?.map(p => ({
+        id: p.id,
+        estriboPrecioId: p.estribo_id,
+        medida: (p as any).estribos.medida,
+        precioUnitario: Number(p.precio_unitario)
+      })) || [];
+      
       setProveedores(proveedoresTransformados);
       setEstribos(estribosTransformados);
+      setPreciosPorUnidad(preciosTransformados);
       setConfiguracion({
         margenGanancia: Number(configData?.margen_ganancia || 90),
         iva: Number(configData?.iva || 21)
@@ -273,6 +302,67 @@ export const useEstribosData = () => {
     }
   };
 
+  const actualizarPrecioPorUnidad = async (estriboPrecioId: string, precio: number) => {
+    try {
+      // Verificar si ya existe un precio para este estribo
+      const precioExistente = preciosPorUnidad.find(p => p.estriboPrecioId === estriboPrecioId);
+      
+      if (precioExistente) {
+        // Actualizar precio existente
+        const { error } = await supabase
+          .from('precios_por_unidad')
+          .update({ precio_unitario: precio })
+          .eq('estribo_id', estriboPrecioId);
+        
+        if (error) throw error;
+        
+        setPreciosPorUnidad(prev => 
+          prev.map(p => 
+            p.estriboPrecioId === estriboPrecioId 
+              ? { ...p, precioUnitario: precio }
+              : p
+          )
+        );
+      } else {
+        // Crear nuevo precio
+        const estribo = estribos.find(e => e.id === estriboPrecioId);
+        if (!estribo) throw new Error('Estribo no encontrado');
+        
+        const { data, error } = await supabase
+          .from('precios_por_unidad')
+          .insert({
+            estribo_id: estriboPrecioId,
+            precio_unitario: precio
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        const nuevoPrecio: PrecioPorUnidad = {
+          id: data.id,
+          estriboPrecioId: data.estribo_id,
+          medida: estribo.medida,
+          precioUnitario: Number(data.precio_unitario)
+        };
+        
+        setPreciosPorUnidad(prev => [...prev, nuevoPrecio]);
+      }
+      
+      toast({
+        title: "Éxito",
+        description: "Precio por unidad actualizado correctamente"
+      });
+    } catch (error) {
+      console.error('Error actualizando precio por unidad:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el precio por unidad",
+        variant: "destructive"
+      });
+    }
+  };
+
   const calcularDatos = (): CalculoDetallado[] => {
     const calculos: CalculoDetallado[] = [];
     
@@ -337,9 +427,81 @@ export const useEstribosData = () => {
     });
   };
 
+  // Nuevas funciones para precios por unidad
+  const calcularDatosPorUnidad = () => {
+    const calculos: any[] = [];
+    
+    estribos.forEach(estribo => {
+      const precioPorUnidad = preciosPorUnidad.find(p => p.estriboPrecioId === estribo.id);
+      if (!precioPorUnidad || precioPorUnidad.precioUnitario === 0) return;
+      
+      proveedores.forEach(proveedor => {
+        const pesoEspecifico = estribo.pesosPorProveedor[proveedor.id] || 0;
+        const costoBase = pesoEspecifico * proveedor.precioPorKg;
+        const precioVentaFijo = precioPorUnidad.precioUnitario;
+        const ivaAmount = precioVentaFijo * (configuracion.iva / (100 + configuracion.iva));
+        const precioSinIva = precioVentaFijo - ivaAmount;
+        
+        calculos.push({
+          estribo: {
+            ...estribo,
+            peso: pesoEspecifico
+          },
+          proveedor,
+          costoBase,
+          precioVentaFijo,
+          precioFinalSinIva: precioSinIva,
+          precioFinalConIva: precioVentaFijo,
+          ivaAmount
+        });
+      });
+    });
+    
+    return calculos;
+  };
+
+  const calcularSimulacionVentasPorUnidad = () => {
+    const calculosDetallados = calcularDatosPorUnidad();
+    const estribosConPrecios = estribos.filter(e => 
+      preciosPorUnidad.some(p => p.estriboPrecioId === e.id && p.precioUnitario > 0)
+    ).slice(0, 3);
+    
+    return estribosConPrecios.map(estribo => {
+      const calculosEstribo = calculosDetallados.filter(c => c.estribo.id === estribo.id);
+      
+      return {
+        estribo: {
+          medida: estribo.medida,
+          peso: 0
+        },
+        proveedores: calculosEstribo.map(calculo => {
+          const costoTotal1000 = calculo.costoBase * 1000;
+          const precioUnitario = calculo.precioVentaFijo;
+          const ventaTotal1000ConIva = precioUnitario * 1000;
+          const ivaDebito1000 = calculo.ivaAmount * 1000;
+          const ivaCredito1000 = costoTotal1000 * (21 / 121);
+          const ivaAPagar1000 = ivaDebito1000 - ivaCredito1000;
+          
+          return {
+            proveedor: calculo.proveedor,
+            peso: calculo.estribo.peso,
+            costoTotal1000,
+            ventaTotal1000SinIva: calculo.precioFinalSinIva * 1000,
+            ventaTotal1000ConIva,
+            ivaDebito1000,
+            ivaCredito1000,
+            ivaAPagar1000,
+            gananciaTotal1000: ventaTotal1000ConIva - costoTotal1000 - ivaAPagar1000
+          };
+        })
+      };
+    });
+  };
+
   return {
     proveedores,
     estribos,
+    preciosPorUnidad,
     configuracion,
     loading,
     setConfiguracion,
@@ -348,8 +510,11 @@ export const useEstribosData = () => {
     eliminarProveedor,
     eliminarEstribo,
     actualizarConfiguracion,
+    actualizarPrecioPorUnidad,
     calcularDatos,
+    calcularDatosPorUnidad,
     calcularSimulacionVentas,
+    calcularSimulacionVentasPorUnidad,
     cargarDatos
   };
 };

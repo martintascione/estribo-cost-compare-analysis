@@ -96,6 +96,38 @@ export type Database = {
         }
         Relationships: []
       }
+      precios_por_unidad: {
+        Row: {
+          created_at: string
+          estribo_id: string
+          id: string
+          precio_unitario: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estribo_id: string
+          id?: string
+          precio_unitario?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estribo_id?: string
+          id?: string
+          precio_unitario?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precios_por_unidad_estribo_id_fkey"
+            columns: ["estribo_id"]
+            isOneToOne: false
+            referencedRelation: "estribos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proveedores: {
         Row: {
           created_at: string

@@ -4,6 +4,7 @@ import { useEstribosData } from "@/hooks/useEstribosData";
 import { FormularioProveedores } from "@/components/FormularioProveedores";
 import { FormularioEstribos } from "@/components/FormularioEstribos";
 import { ConfiguracionVenta } from "@/components/ConfiguracionVenta";
+import { PreciosPorUnidad } from "@/components/PreciosPorUnidad";
 import { ComparacionPrecios } from "@/components/ComparacionPrecios";
 import { SimulacionVentas } from "@/components/SimulacionVentas";
 
@@ -11,6 +12,7 @@ const Index = () => {
   const {
     proveedores,
     estribos,
+    preciosPorUnidad,
     configuracion,
     loading,
     setConfiguracion,
@@ -19,12 +21,17 @@ const Index = () => {
     eliminarProveedor,
     eliminarEstribo,
     actualizarConfiguracion,
+    actualizarPrecioPorUnidad,
     calcularDatos,
-    calcularSimulacionVentas
+    calcularDatosPorUnidad,
+    calcularSimulacionVentas,
+    calcularSimulacionVentasPorUnidad
   } = useEstribosData();
 
   const calculosDetallados = calcularDatos();
+  const calculosDetalladosPorUnidad = calcularDatosPorUnidad();
   const simulacionVentas = calcularSimulacionVentas();
+  const simulacionVentasPorUnidad = calcularSimulacionVentasPorUnidad();
 
   if (loading) {
     return (
@@ -89,21 +96,35 @@ const Index = () => {
               />
             </div>
             
-            <ConfiguracionVenta
-              configuracion={configuracion}
-              onCambiarConfiguracion={setConfiguracion}
-              onActualizarConfiguracion={actualizarConfiguracion}
-            />
+            <div className="space-y-6">
+              <ConfiguracionVenta
+                configuracion={configuracion}
+                onCambiarConfiguracion={setConfiguracion}
+                onActualizarConfiguracion={actualizarConfiguracion}
+              />
+              
+              <PreciosPorUnidad
+                estribos={estribos}
+                preciosPorUnidad={preciosPorUnidad}
+                onActualizarPrecio={actualizarPrecioPorUnidad}
+              />
+            </div>
           </TabsContent>
 
           {/* Tab de Análisis */}
           <TabsContent value="analisis" className="space-y-6">
-            <ComparacionPrecios calculos={calculosDetallados} />
+            <ComparacionPrecios 
+              calculos={calculosDetallados} 
+              calculosPorUnidad={calculosDetalladosPorUnidad}
+            />
           </TabsContent>
 
           {/* Tab de Simulación */}
           <TabsContent value="simulacion" className="space-y-6">
-            <SimulacionVentas simulacion={simulacionVentas} />
+            <SimulacionVentas 
+              simulacion={simulacionVentas}
+              simulacionPorUnidad={simulacionVentasPorUnidad}
+            />
           </TabsContent>
         </Tabs>
       </div>

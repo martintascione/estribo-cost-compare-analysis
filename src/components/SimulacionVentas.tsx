@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, Package, DollarSign, Calculator, ArrowRight, Minus, Plus } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Calculator, ArrowRight, Minus, Plus, Weight, Hash } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -23,14 +24,18 @@ interface SimulacionData {
 
 interface Props {
   simulacion: SimulacionData[];
+  simulacionPorUnidad?: SimulacionData[];
 }
 
-export const SimulacionVentas = ({ simulacion }: Props) => {
+export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props) => {
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState<string>('');
+  const [modoPorUnidad, setModoPorUnidad] = useState(false);
+  
+  const datosActuales = modoPorUnidad ? simulacionPorUnidad : simulacion;
   
   // Obtener lista única de proveedores
   const proveedoresUnicos = Array.from(
-    new Set(simulacion.flatMap(item => 
+    new Set(datosActuales.flatMap(item => 
       item.proveedores.map(prov => prov.proveedor.nombre)
     ))
   );
@@ -41,7 +46,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
   }
 
   // Crear una estructura más simple para mostrar los datos
-  const datosSimplificados = simulacion.flatMap(item => 
+  const datosSimplificados = datosActuales.flatMap(item => 
     item.proveedores.map(prov => ({
       medida: item.estribo.medida,
       peso: prov.peso, // Usar el peso específico del proveedor
@@ -78,10 +83,39 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
           <Calculator className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium text-primary">Simulación de Ventas</span>
         </div>
-        <h2 className="text-3xl font-bold">Venta de 1,000 Unidades por Medida</h2>
+        <h2 className="text-3xl font-bold">
+          Venta de 1,000 Unidades por Medida {modoPorUnidad ? '(Precio Fijo)' : '(Por Peso)'}
+        </h2>
         <p className="text-muted-foreground text-lg">
           Análisis completo de costos, ventas y ganancias por proveedor
         </p>
+        
+        {/* Toggle para cambiar modo */}
+        <div className="flex justify-center gap-2">
+          <Button
+            variant={!modoPorUnidad ? "default" : "outline"}
+            onClick={() => setModoPorUnidad(false)}
+            className="flex items-center gap-2"
+          >
+            <Weight className="w-4 h-4" />
+            Por Peso (Kg)
+          </Button>
+          <Button
+            variant={modoPorUnidad ? "default" : "outline"}
+            onClick={() => setModoPorUnidad(true)}
+            disabled={simulacionPorUnidad.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Hash className="w-4 h-4" />
+            Por Unidad
+          </Button>
+        </div>
+        
+        {modoPorUnidad && simulacionPorUnidad.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Configure precios por unidad en la sección de Configuración para usar este modo
+          </p>
+        )}
       </div>
 
       {/* Tabla principal */}
@@ -218,13 +252,13 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
             <h3 className="text-lg font-semibold">Resumen de la Simulación</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
               <div>
-                <span className="font-medium">Total de medidas analizadas:</span> {simulacion.length}
+                <span className="font-medium">Total de medidas analizadas:</span> {datosActuales.length}
               </div>
               <div>
-                <span className="font-medium">Proveedores comparados:</span> {simulacion[0]?.proveedores.length || 0}
+                <span className="font-medium">Proveedores comparados:</span> {datosActuales[0]?.proveedores.length || 0}
               </div>
               <div>
-                <span className="font-medium">Unidades totales:</span> {simulacion.length * 1000}
+                <span className="font-medium">Unidades totales:</span> {datosActuales.length * 1000}
               </div>
             </div>
           </div>
