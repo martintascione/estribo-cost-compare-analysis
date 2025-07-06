@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calculator } from 'lucide-react';
 import { ConfiguracionVenta as ConfiguracionVentaType } from '@/hooks/useEstribosData';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   configuracion: ConfiguracionVentaType;
@@ -73,23 +74,23 @@ export const ConfiguracionVenta = ({ configuracion, onCambiarConfiguracion }: Pr
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Costo base:</span>
-              <span>$100.00</span>
+              <span>{formatCurrency(100)}</span>
             </div>
             <div className="flex justify-between">
               <span>+ Margen ({configuracion.margenGanancia}%):</span>
-              <span>$${(100 * configuracion.margenGanancia / 100).toFixed(2)}</span>
+              <span>{formatCurrency(100 * configuracion.margenGanancia / 100)}</span>
             </div>
             <div className="flex justify-between font-medium">
               <span>Precio sin IVA:</span>
-              <span>$${(100 * (1 + configuracion.margenGanancia / 100)).toFixed(2)}</span>
+              <span>{formatCurrency(100 * (1 + configuracion.margenGanancia / 100))}</span>
             </div>
             <div className="flex justify-between">
               <span>+ IVA ({configuracion.iva}%):</span>
-              <span>$${(100 * (1 + configuracion.margenGanancia / 100) * configuracion.iva / 100).toFixed(2)}</span>
+              <span>{formatCurrency(100 * (1 + configuracion.margenGanancia / 100) * configuracion.iva / 100)}</span>
             </div>
             <div className="flex justify-between font-bold text-primary border-t pt-2">
               <span>Precio final:</span>
-              <span>$${(100 * (1 + configuracion.margenGanancia / 100) * (1 + configuracion.iva / 100)).toFixed(2)}</span>
+              <span>{formatCurrency(100 * (1 + configuracion.margenGanancia / 100) * (1 + configuracion.iva / 100))}</span>
             </div>
           </div>
         </div>

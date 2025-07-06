@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { TrendingDown, DollarSign } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { TrendingDown, DollarSign, Users } from 'lucide-react';
 import { CalculoDetallado } from '@/hooks/useEstribosData';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   calculos: CalculoDetallado[];
@@ -45,8 +46,43 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
     return resultado;
   });
 
+  // Datos para el gráfico de torta - comparación de proveedores
+  const proveedoresData = calculos.reduce((acc, calculo) => {
+    const existente = acc.find(item => item.nombre === calculo.proveedor.nombre);
+    if (existente) {
+      existente.totalVentas += calculo.precioFinalConIva;
+      existente.count += 1;
+    } else {
+      acc.push({
+        nombre: calculo.proveedor.nombre,
+        totalVentas: calculo.precioFinalConIva,
+        count: 1,
+        precioPorKg: calculo.proveedor.precioPorKg
+      });
+    }
+    return acc;
+  }, [] as any[]);
+
+  // Calcular promedio de precios por proveedor para análisis
+  const promedioProveedores = proveedoresData.map(prov => ({
+    ...prov,
+    promedio: prov.totalVentas / prov.count
+  }));
+
+  const proveedorMasEconomico = promedioProveedores.reduce((min, prov) => 
+    prov.precioPorKg < min.precioPorKg ? prov : min
+  );
+  
+  const proveedorMasCaro = promedioProveedores.reduce((max, prov) => 
+    prov.precioPorKg > max.precioPorKg ? prov : max
+  );
+
+  const diferenciaPorcentual = ((proveedorMasCaro.precioPorKg - proveedorMasEconomico.precioPorKg) / proveedorMasCaro.precioPorKg * 100).toFixed(1);
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))'];
+
   const chartConfig = calculos.reduce((config, calculo, index) => {
-    const color = index % 2 === 0 ? 'hsl(var(--primary))' : 'hsl(var(--secondary))';
+    const color = COLORS[index % COLORS.length];
     config[calculo.proveedor.nombre] = {
       label: calculo.proveedor.nombre,
       color
@@ -54,45 +90,105 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
     return config;
   }, {} as any);
 
+  const pieChartConfig = proveedoresData.reduce((config, prov, index) => {
+    config[prov.nombre] = {
+      label: prov.nombre,
+      color: COLORS[index % COLORS.length]
+    };
+    return config;
+  }, {} as any);
+
   return (
     <div className="space-y-6">
-      {/* Gráfico de comparación */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-primary" />
-            Comparación de Precios Finales
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-80">
-            <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="medida" 
-                tick={{ fontSize: 12 }}
-                stroke="hsl(var(--muted-foreground))"
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="hsl(var(--muted-foreground))"
-              />
-              <ChartTooltip 
-                content={<ChartTooltipContent />}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, "Precio Final"]}
-              />
-              {Object.keys(chartConfig).map((proveedorNombre, index) => (
-                <Bar 
-                  key={proveedorNombre}
-                  dataKey={proveedorNombre} 
-                  fill={chartConfig[proveedorNombre].color}
-                  radius={[4, 4, 0, 0]}
+      {/* Gráficos comparativos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de barras */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" />
+              Comparación de Precios Finales
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Comparación de precios finales por medida entre proveedores
+            </p>
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <p className="text-sm font-medium">
+                📊 Análisis: El {proveedorMasEconomico.nombre} es un {diferenciaPorcentual}% más económico por kilo que {proveedorMasCaro.nombre}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-80">
+              <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="medida" 
+                  tick={{ fontSize: 12 }}
+                  stroke="hsl(var(--muted-foreground))"
                 />
-              ))}
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value: number) => [formatCurrency(value), "Precio Final"]}
+                />
+                {Object.keys(chartConfig).map((proveedorNombre, index) => (
+                  <Bar 
+                    key={proveedorNombre}
+                    dataKey={proveedorNombre} 
+                    fill={chartConfig[proveedorNombre].color}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Gráfico de torta */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-secondary" />
+              Distribución por Proveedor
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Comparación de costos base promedio por proveedor
+            </p>
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <p className="text-sm font-medium">
+                💡 Análisis: {proveedorMasEconomico.nombre} ofrece un costo {formatCurrency(proveedorMasEconomico.precioPorKg)} por kg vs {formatCurrency(proveedorMasCaro.precioPorKg)} por kg
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={pieChartConfig} className="h-80">
+              <PieChart>
+                <Pie
+                  data={promedioProveedores}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="promedio"
+                  nameKey="nombre"
+                  label={({ nombre, promedio }) => `${nombre}: ${formatCurrency(promedio)}`}
+                >
+                  {promedioProveedores.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value: number) => [formatCurrency(value), "Precio Promedio"]}
+                />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Tabla detallada */}
       <Card>
@@ -122,16 +218,16 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                       <Badge variant="outline">{calculo.proveedor.nombre}</Badge>
                     </TableCell>
                     <TableCell className="text-center font-medium">
-                      ${calculo.costoBase.toFixed(2)}
+                      {formatCurrency(calculo.costoBase)}
                     </TableCell>
                     <TableCell className="text-center font-medium text-primary">
-                      ${calculo.precioFinalSinIva.toFixed(2)}
+                      {formatCurrency(calculo.precioFinalSinIva)}
                     </TableCell>
                     <TableCell className="text-center font-bold text-success">
-                      ${calculo.precioFinalConIva.toFixed(2)}
+                      {formatCurrency(calculo.precioFinalConIva)}
                     </TableCell>
                     <TableCell className="text-center text-warning">
-                      ${calculo.ivaAmount.toFixed(2)}
+                      {formatCurrency(calculo.ivaAmount)}
                     </TableCell>
                   </TableRow>
                 ))}

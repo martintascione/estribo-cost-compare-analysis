@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Package, DollarSign, Receipt } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface SimulacionData {
   estribo: { medida: string; peso: number };
@@ -58,7 +59,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                       <div className="bg-muted/20 p-3 rounded-lg">
                         <p className="text-sm text-muted-foreground">Costo Total</p>
                         <p className="text-xl font-bold text-destructive">
-                          ${provData.costoTotal1000.toLocaleString()}
+                          {formatCurrency(provData.costoTotal1000)}
                         </p>
                       </div>
                     </div>
@@ -72,7 +73,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                       <div className="bg-success/10 p-3 rounded-lg border border-success/20">
                         <p className="text-sm text-muted-foreground">Venta Sin IVA</p>
                         <p className="text-lg font-bold text-success">
-                          ${provData.ventaTotal1000SinIva.toLocaleString()}
+                          {formatCurrency(provData.ventaTotal1000SinIva)}
                         </p>
                       </div>
                     </div>
@@ -81,7 +82,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                     <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
                       <p className="text-sm text-muted-foreground">Venta Con IVA</p>
                       <p className="text-lg font-bold text-primary">
-                        ${provData.ventaTotal1000ConIva.toLocaleString()}
+                        {formatCurrency(provData.ventaTotal1000ConIva)}
                       </p>
                     </div>
 
@@ -89,7 +90,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                     <div className="bg-warning/10 p-3 rounded-lg border border-warning/20">
                       <p className="text-sm text-muted-foreground">IVA Total</p>
                       <p className="text-lg font-bold text-warning">
-                        ${provData.ivaTotal1000.toLocaleString()}
+                        {formatCurrency(provData.ivaTotal1000)}
                       </p>
                     </div>
                   </div>
@@ -103,7 +104,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-success">
-                          ${provData.gananciaTotal1000.toLocaleString()}
+                          {formatCurrency(provData.gananciaTotal1000)}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {((provData.gananciaTotal1000 / provData.costoTotal1000) * 100).toFixed(1)}% ROI

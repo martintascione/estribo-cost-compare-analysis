@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Building2 } from 'lucide-react';
 import { Proveedor } from '@/hooks/useEstribosData';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   proveedores: Proveedor[];
@@ -88,13 +89,13 @@ export const FormularioProveedores = ({ proveedores, onAgregarProveedor, onElimi
                   <div>
                     <p className="font-medium">{proveedor.nombre}</p>
                     <p className="text-sm text-muted-foreground">
-                      ${proveedor.precioPorKg.toLocaleString()} por kg
+                      {formatCurrency(proveedor.precioPorKg)} por kg
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    ${(proveedor.precioPorKg / 1000).toFixed(2)}/g
+                    {formatCurrency(proveedor.precioPorKg / 1000)}/g
                   </Badge>
                   <Button
                     variant="outline"
