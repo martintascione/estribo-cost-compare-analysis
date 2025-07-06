@@ -46,38 +46,59 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
     return resultado;
   });
 
-  // Datos para el gráfico de torta - comparación de proveedores
-  const proveedoresData = calculos.reduce((acc, calculo) => {
+  // Datos para el gráfico de torta - comparación de precios por kg de proveedores
+  const proveedoresUnicosMap = new Map();
+  calculos.forEach(calculo => {
+    if (!proveedoresUnicosMap.has(calculo.proveedor.nombre)) {
+      proveedoresUnicosMap.set(calculo.proveedor.nombre, {
+        nombre: calculo.proveedor.nombre,
+        precioPorKg: calculo.proveedor.precioPorKg
+      });
+    }
+  });
+  const proveedoresUnicos = Array.from(proveedoresUnicosMap.values());
+
+  // Análisis de diferencias
+  const proveedorMasEconomicoKg = proveedoresUnicos.reduce((min, prov) => 
+    prov.precioPorKg < min.precioPorKg ? prov : min
+  );
+  
+  const proveedorMasCaroKg = proveedoresUnicos.reduce((max, prov) => 
+    prov.precioPorKg > max.precioPorKg ? prov : max
+  );
+
+  const diferenciaPorcentualKg = ((proveedorMasCaroKg.precioPorKg - proveedorMasEconomicoKg.precioPorKg) / proveedorMasCaroKg.precioPorKg * 100).toFixed(1);
+
+  // Análisis de precios finales por unidad (promedio)
+  const promediosPorProveedor = calculos.reduce((acc, calculo) => {
     const existente = acc.find(item => item.nombre === calculo.proveedor.nombre);
     if (existente) {
-      existente.totalVentas += calculo.precioFinalConIva;
+      existente.totalPrecios += calculo.precioFinalConIva;
       existente.count += 1;
     } else {
       acc.push({
         nombre: calculo.proveedor.nombre,
-        totalVentas: calculo.precioFinalConIva,
-        count: 1,
-        precioPorKg: calculo.proveedor.precioPorKg
+        totalPrecios: calculo.precioFinalConIva,
+        count: 1
       });
     }
     return acc;
   }, [] as any[]);
 
-  // Calcular promedio de precios por proveedor para análisis
-  const promedioProveedores = proveedoresData.map(prov => ({
+  const promediosFinales = promediosPorProveedor.map(prov => ({
     ...prov,
-    promedio: prov.totalVentas / prov.count
+    promedio: prov.totalPrecios / prov.count
   }));
 
-  const proveedorMasEconomico = promedioProveedores.reduce((min, prov) => 
-    prov.precioPorKg < min.precioPorKg ? prov : min
+  const proveedorMasEconomicoUnidad = promediosFinales.reduce((min, prov) => 
+    prov.promedio < min.promedio ? prov : min
   );
   
-  const proveedorMasCaro = promedioProveedores.reduce((max, prov) => 
-    prov.precioPorKg > max.precioPorKg ? prov : max
+  const proveedorMasCaroUnidad = promediosFinales.reduce((max, prov) => 
+    prov.promedio > max.promedio ? prov : max
   );
 
-  const diferenciaPorcentual = ((proveedorMasCaro.precioPorKg - proveedorMasEconomico.precioPorKg) / proveedorMasCaro.precioPorKg * 100).toFixed(1);
+  const diferenciaPorcentualUnidad = ((proveedorMasCaroUnidad.promedio - proveedorMasEconomicoUnidad.promedio) / proveedorMasCaroUnidad.promedio * 100).toFixed(1);
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))'];
 
@@ -90,7 +111,7 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
     return config;
   }, {} as any);
 
-  const pieChartConfig = proveedoresData.reduce((config, prov, index) => {
+  const pieChartConfig = proveedoresUnicos.reduce((config, prov, index) => {
     config[prov.nombre] = {
       label: prov.nombre,
       color: COLORS[index % COLORS.length]
@@ -107,14 +128,14 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-primary" />
-              Comparación de Precios Finales
+              Precios Finales por Unidad
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Comparación de precios finales por medida entre proveedores
+              Comparación de precios finales de venta al público por estribo (incluye margen + IVA)
             </p>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-sm font-medium">
-                📊 Análisis: El {proveedorMasEconomico.nombre} es un {diferenciaPorcentual}% más económico por kilo que {proveedorMasCaro.nombre}
+                📊 Análisis: {proveedorMasEconomicoUnidad.nombre} es {diferenciaPorcentualUnidad}% más económico por unidad que {proveedorMasCaroUnidad.nombre} (incluye margen de fabricación)
               </p>
             </div>
           </CardHeader>
@@ -153,14 +174,14 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-secondary" />
-              Distribución por Proveedor
+              Precios por Kilogramo
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Comparación de costos base promedio por proveedor
+              Comparación de costos base por kilogramo entre proveedores (sin margen)
             </p>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-sm font-medium">
-                💡 Análisis: {proveedorMasEconomico.nombre} ofrece un costo {formatCurrency(proveedorMasEconomico.precioPorKg)} por kg vs {formatCurrency(proveedorMasCaro.precioPorKg)} por kg
+                💡 Análisis: {proveedorMasEconomicoKg.nombre} ofrece {formatCurrency(proveedorMasEconomicoKg.precioPorKg)} por kg vs {formatCurrency(proveedorMasCaroKg.precioPorKg)} por kg ({diferenciaPorcentualKg}% diferencia)
               </p>
             </div>
           </CardHeader>
@@ -168,21 +189,21 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
             <ChartContainer config={pieChartConfig} className="h-80">
               <PieChart>
                 <Pie
-                  data={promedioProveedores}
+                  data={proveedoresUnicos}
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  dataKey="promedio"
+                  dataKey="precioPorKg"
                   nameKey="nombre"
-                  label={({ nombre, promedio }) => `${nombre}: ${formatCurrency(promedio)}`}
+                  label={({ nombre, precioPorKg }) => `${nombre}: ${formatCurrency(precioPorKg)}`}
                 >
-                  {promedioProveedores.map((entry, index) => (
+                  {proveedoresUnicos.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
-                  formatter={(value: number) => [formatCurrency(value), "Precio Promedio"]}
+                  formatter={(value: number) => [formatCurrency(value), "Precio por Kg"]}
                 />
               </PieChart>
             </ChartContainer>
