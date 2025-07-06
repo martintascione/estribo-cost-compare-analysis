@@ -253,31 +253,34 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                     </span>
                   </div>
                   
-                  <Table>
+                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="font-bold">Medida</TableHead>
                         <TableHead className="font-bold text-center">Peso (kg)</TableHead>
-                        <TableHead className="font-bold text-center">Costo Base</TableHead>
-                        {discriminarIva && (
-                          <TableHead className="font-bold text-center">IVA Crédito</TableHead>
-                        )}
                         <TableHead className="font-bold text-center">
-                          {discriminarIva ? 'Precio Sin IVA' : 'Precio Final'}
+                          Costo
+                          <div className="text-xs font-normal text-muted-foreground">con IVA</div>
+                        </TableHead>
+                        {discriminarIva && (
+                          <TableHead className="font-bold text-center border-r-2 border-border">IVA Crédito</TableHead>
+                        )}
+                        <TableHead className={`font-bold text-center ${discriminarIva ? 'border-l-2 border-border' : ''}`}>
+                          Precio de Venta
+                          <div className="text-xs font-normal text-muted-foreground">con IVA</div>
                         </TableHead>
                         {discriminarIva && (
                           <>
                             <TableHead className="font-bold text-center">IVA Débito</TableHead>
                             <TableHead className="font-bold text-center">IVA a Pagar</TableHead>
-                            <TableHead className="font-bold text-center">Precio Con IVA</TableHead>
                           </>
                         )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {calculosProveedor.map((calculo, index) => {
-                        // Calcular IVA crédito del costo base
-                        const ivaCredito = calculo.costoBase * (21 / 100); // IVA del costo base
+                        // Calcular IVA crédito del costo base (que incluye IVA)
+                        const ivaCredito = calculo.costoBase * (21 / 121); // IVA incluido en el costo base
                         const ivaAPagar = calculo.ivaAmount - ivaCredito; // IVA a pagar = IVA débito - IVA crédito
                         
                         return (
@@ -293,10 +296,7 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                               </TableCell>
                             )}
                             <TableCell className="text-center font-medium text-primary">
-                              {discriminarIva 
-                                ? formatCurrency(calculo.precioFinalSinIva)
-                                : formatCurrency(calculo.precioFinalConIva)
-                              }
+                              {formatCurrency(calculo.precioFinalConIva)}
                             </TableCell>
                             {discriminarIva && (
                               <>
@@ -305,9 +305,6 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                                 </TableCell>
                                 <TableCell className="text-center font-bold text-red-600">
                                   {formatCurrency(ivaAPagar)}
-                                </TableCell>
-                                <TableCell className="text-center font-bold text-success">
-                                  {formatCurrency(calculo.precioFinalConIva)}
                                 </TableCell>
                               </>
                             )}
