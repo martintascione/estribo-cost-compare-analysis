@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, Package, DollarSign, Calculator, ArrowRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TrendingUp, Package, DollarSign, Calculator, ArrowRight, Minus, Plus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { useState } from 'react';
 
 interface SimulacionData {
   estribo: { medida: string; peso: number };
@@ -24,6 +26,20 @@ interface Props {
 }
 
 export const SimulacionVentas = ({ simulacion }: Props) => {
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState<string>('');
+  
+  // Obtener lista única de proveedores
+  const proveedoresUnicos = Array.from(
+    new Set(simulacion.flatMap(item => 
+      item.proveedores.map(prov => prov.proveedor.nombre)
+    ))
+  );
+
+  // Inicializar el proveedor seleccionado con el primero disponible
+  if (!proveedorSeleccionado && proveedoresUnicos.length > 0) {
+    setProveedorSeleccionado(proveedoresUnicos[0]);
+  }
+
   // Crear una estructura más simple para mostrar los datos
   const datosSimplificados = simulacion.flatMap(item => 
     item.proveedores.map(prov => ({
@@ -32,19 +48,27 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
       proveedor: prov.proveedor.nombre,
       costoTotal: prov.costoTotal1000,
       ventaTotal: prov.ventaTotal1000ConIva,
+      ivaDebito: prov.ivaDebito1000,
+      ivaCredito: prov.ivaCredito1000,
       ivaAPagar: prov.ivaAPagar1000,
       ganancia: prov.gananciaTotal1000,
       roi: ((prov.gananciaTotal1000 / prov.costoTotal1000) * 100)
     }))
   );
 
-  // Calcular totales generales
-  const totales = datosSimplificados.reduce((acc, item) => ({
+  // Calcular totales para el proveedor seleccionado
+  const datosFiltrados = datosSimplificados.filter(item => 
+    item.proveedor === proveedorSeleccionado
+  );
+
+  const totales = datosFiltrados.reduce((acc, item) => ({
     costo: acc.costo + item.costoTotal,
     venta: acc.venta + item.ventaTotal,
-    iva: acc.iva + item.ivaAPagar,
+    ivaDebito: acc.ivaDebito + item.ivaDebito,
+    ivaCredito: acc.ivaCredito + item.ivaCredito,
+    ivaAPagar: acc.ivaAPagar + item.ivaAPagar,
     ganancia: acc.ganancia + item.ganancia
-  }), { costo: 0, venta: 0, iva: 0, ganancia: 0 });
+  }), { costo: 0, venta: 0, ivaDebito: 0, ivaCredito: 0, ivaAPagar: 0, ganancia: 0 });
 
   return (
     <div className="space-y-8">
@@ -118,6 +142,27 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
         </CardContent>
       </Card>
 
+      {/* Selector de proveedor para el resumen */}
+      <Card className="bg-muted/30">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center gap-4">
+            <label className="text-sm font-medium">Calcular resumen para:</label>
+            <Select value={proveedorSeleccionado} onValueChange={setProveedorSeleccionado}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Seleccionar proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {proveedoresUnicos.map(proveedor => (
+                  <SelectItem key={proveedor} value={proveedor}>
+                    {proveedor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Resumen de totales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="text-center">
@@ -140,7 +185,17 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
           <CardContent className="pt-6">
             <Calculator className="w-8 h-8 mx-auto mb-2 text-warning" />
             <p className="text-sm text-muted-foreground">IVA a Pagar (Neto)</p>
-            <p className="text-2xl font-bold text-warning">{formatCurrency(totales.iva)}</p>
+            <p className="text-2xl font-bold text-warning">{formatCurrency(totales.ivaAPagar)}</p>
+            <div className="text-xs text-muted-foreground mt-2 space-y-1">
+              <div className="flex items-center justify-center gap-1">
+                <Plus className="w-3 h-3" />
+                <span>Débito: {formatCurrency(totales.ivaDebito)}</span>
+              </div>
+              <div className="flex items-center justify-center gap-1">
+                <Minus className="w-3 h-3" />
+                <span>Crédito: {formatCurrency(totales.ivaCredito)}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
