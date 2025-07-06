@@ -99,16 +99,6 @@ export const PreciosPorUnidad = ({ estribos, preciosPorUnidad, onActualizarPreci
             </Button>
           </div>
 
-          {/* Información adicional */}
-          <div className="p-4 bg-muted/20 rounded-lg">
-            <h4 className="font-medium mb-2">Información:</h4>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              <li>• Los precios por unidad son independientes del peso y proveedor</li>
-              <li>• Se utilizan para calcular ganancias cuando vendes por unidad fija</li>
-              <li>• Los costos siguen calculándose según el peso y proveedor</li>
-              <li>• Un precio de $0 significa que no hay precio configurado</li>
-            </ul>
-          </div>
         </div>
       </CardContent>
     </Card>
