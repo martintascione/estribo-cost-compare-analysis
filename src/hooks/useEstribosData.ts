@@ -9,7 +9,7 @@ export interface Proveedor {
 export interface Estribo {
   id: string;
   medida: string;
-  peso: number;
+  pesosPorProveedor: { [proveedorId: string]: number }; // Peso específico por proveedor
 }
 
 export interface ConfiguracionVenta {
@@ -18,7 +18,7 @@ export interface ConfiguracionVenta {
 }
 
 export interface CalculoDetallado {
-  estribo: Estribo;
+  estribo: Estribo & { peso: number }; // Incluye peso específico para el proveedor
   proveedor: Proveedor;
   costoBase: number;
   costoConMargen: number;
@@ -34,11 +34,46 @@ export const useEstribosData = () => {
   ]);
 
   const [estribos, setEstribos] = useState<Estribo[]>([
-    { id: '1', medida: '10x10 cm', peso: 0.0350 },
-    { id: '2', medida: '12x12 cm', peso: 0.0404 },
-    { id: '3', medida: '15x15 cm', peso: 0.0485 },
-    { id: '4', medida: '10x15 cm', peso: 0.0418 },
-    { id: '5', medida: '20x20 cm', peso: 0.0620 }
+    { 
+      id: '1', 
+      medida: '10x10 cm', 
+      pesosPorProveedor: { 
+        '1': 0.0350, // Proveedor Enrique
+        '2': 0.0350  // Proveedor Chino (mismo peso por defecto)
+      } 
+    },
+    { 
+      id: '2', 
+      medida: '12x12 cm', 
+      pesosPorProveedor: { 
+        '1': 0.0404,
+        '2': 0.0404 
+      } 
+    },
+    { 
+      id: '3', 
+      medida: '15x15 cm', 
+      pesosPorProveedor: { 
+        '1': 0.0485,
+        '2': 0.0485 
+      } 
+    },
+    { 
+      id: '4', 
+      medida: '10x15 cm', 
+      pesosPorProveedor: { 
+        '1': 0.0418,
+        '2': 0.0418 
+      } 
+    },
+    { 
+      id: '5', 
+      medida: '20x20 cm', 
+      pesosPorProveedor: { 
+        '1': 0.0620,
+        '2': 0.0620 
+      } 
+    }
   ]);
 
   const [configuracion, setConfiguracion] = useState<ConfiguracionVenta>({
@@ -69,13 +104,17 @@ export const useEstribosData = () => {
     
     estribos.forEach(estribo => {
       proveedores.forEach(proveedor => {
-        const costoBase = estribo.peso * proveedor.precioPorKg;
+        const pesoEspecifico = estribo.pesosPorProveedor[proveedor.id] || 0;
+        const costoBase = pesoEspecifico * proveedor.precioPorKg;
         const costoConMargen = costoBase * (1 + configuracion.margenGanancia / 100);
         const ivaAmount = costoConMargen * (configuracion.iva / 100);
         const precioFinalConIva = costoConMargen + ivaAmount;
         
         calculos.push({
-          estribo,
+          estribo: {
+            ...estribo,
+            peso: pesoEspecifico // Para compatibilidad con componentes existentes
+          },
           proveedor,
           costoBase,
           costoConMargen,
@@ -97,7 +136,10 @@ export const useEstribosData = () => {
       const calculosEstribo = calculosDetallados.filter(c => c.estribo.id === estribo.id);
       
       return {
-        estribo,
+        estribo: {
+          medida: estribo.medida,
+          peso: calculosEstribo[0]?.estribo.peso || 0 // Usar el peso del primer cálculo como referencia
+        },
         proveedores: calculosEstribo.map(calculo => ({
           proveedor: calculo.proveedor,
           costoTotal1000: calculo.costoBase * 1000,

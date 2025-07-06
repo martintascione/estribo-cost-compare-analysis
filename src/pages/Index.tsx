@@ -70,6 +70,7 @@ const Index = () => {
               
               <FormularioEstribos
                 estribos={estribos}
+                proveedores={proveedores}
                 onAgregarEstribo={agregarEstribo}
                 onEliminarEstribo={eliminarEstribo}
               />

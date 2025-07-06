@@ -8,23 +8,30 @@ import { Estribo } from '@/hooks/useEstribosData';
 
 interface Props {
   estribos: Estribo[];
+  proveedores: Array<{ id: string; nombre: string }>;
   onAgregarEstribo: (estribo: Omit<Estribo, 'id'>) => void;
   onEliminarEstribo: (id: string) => void;
 }
 
-export const FormularioEstribos = ({ estribos, onAgregarEstribo, onEliminarEstribo }: Props) => {
+export const FormularioEstribos = ({ estribos, proveedores, onAgregarEstribo, onEliminarEstribo }: Props) => {
   const [medida, setMedida] = useState('');
-  const [peso, setPeso] = useState('');
+  const [pesoBase, setPesoBase] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (medida && peso) {
+    if (medida && pesoBase) {
+      // Crear pesosPorProveedor con el mismo peso base para todos los proveedores
+      const pesosPorProveedor: { [key: string]: number } = {};
+      proveedores.forEach(proveedor => {
+        pesosPorProveedor[proveedor.id] = parseFloat(pesoBase);
+      });
+
       onAgregarEstribo({
         medida,
-        peso: parseFloat(peso)
+        pesosPorProveedor
       });
       setMedida('');
-      setPeso('');
+      setPesoBase('');
     }
   };
 
@@ -51,16 +58,19 @@ export const FormularioEstribos = ({ estribos, onAgregarEstribo, onEliminarEstri
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="peso">Peso Unitario (kg)</Label>
+              <Label htmlFor="peso">Peso Base (kg)</Label>
               <Input
                 id="peso"
                 type="number"
                 step="0.0001"
-                value={peso}
-                onChange={(e) => setPeso(e.target.value)}
+                value={pesoBase}
+                onChange={(e) => setPesoBase(e.target.value)}
                 placeholder="Ej: 0.0350"
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Se aplicará el mismo peso para todos los proveedores inicialmente
+              </p>
             </div>
           </div>
           <Button type="submit" className="w-full">
@@ -81,22 +91,28 @@ export const FormularioEstribos = ({ estribos, onAgregarEstribo, onEliminarEstri
               {estribos.map((estribo) => (
                 <div
                   key={estribo.id}
-                  className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border"
+                  className="p-3 bg-muted/20 rounded-lg border space-y-2"
                 >
-                  <div>
+                  <div className="flex items-center justify-between">
                     <p className="font-medium">{estribo.medida}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {estribo.peso.toFixed(4)} kg
-                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEliminarEstribo(estribo.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEliminarEstribo(estribo.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Pesos por proveedor:</p>
+                    {proveedores.map(proveedor => (
+                      <div key={proveedor.id} className="flex justify-between text-xs">
+                        <span>{proveedor.nombre}:</span>
+                        <span>{(estribo.pesosPorProveedor[proveedor.id] || 0).toFixed(4)} kg</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
