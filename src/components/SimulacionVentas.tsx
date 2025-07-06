@@ -12,7 +12,9 @@ interface SimulacionData {
     costoTotal1000: number;
     ventaTotal1000SinIva: number;
     ventaTotal1000ConIva: number;
-    ivaTotal1000: number;
+    ivaDebito1000: number; // IVA de la venta
+    ivaCredito1000: number; // IVA incluido en el costo
+    ivaAPagar1000: number; // IVA neto a pagar
     gananciaTotal1000: number;
   }>;
 }
@@ -30,7 +32,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
       proveedor: prov.proveedor.nombre,
       costoTotal: prov.costoTotal1000,
       ventaTotal: prov.ventaTotal1000ConIva,
-      ivaTotal: prov.ivaTotal1000,
+      ivaAPagar: prov.ivaAPagar1000,
       ganancia: prov.gananciaTotal1000,
       roi: ((prov.gananciaTotal1000 / prov.costoTotal1000) * 100)
     }))
@@ -40,7 +42,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
   const totales = datosSimplificados.reduce((acc, item) => ({
     costo: acc.costo + item.costoTotal,
     venta: acc.venta + item.ventaTotal,
-    iva: acc.iva + item.ivaTotal,
+    iva: acc.iva + item.ivaAPagar,
     ganancia: acc.ganancia + item.ganancia
   }), { costo: 0, venta: 0, iva: 0, ganancia: 0 });
 
@@ -76,7 +78,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                   <TableHead className="font-bold text-center">Peso Total<br/><span className="text-xs font-normal">(1,000 unidades)</span></TableHead>
                   <TableHead className="font-bold text-center border-l-2 border-border">Costo Total</TableHead>
                   <TableHead className="font-bold text-center">Venta Total<br/><span className="text-xs font-normal">(con IVA)</span></TableHead>
-                  <TableHead className="font-bold text-center">IVA Total</TableHead>
+                  <TableHead className="font-bold text-center">IVA a Pagar<br/><span className="text-xs font-normal">(neto)</span></TableHead>
                   <TableHead className="font-bold text-center border-l-2 border-border">Ganancia</TableHead>
                   <TableHead className="font-bold text-center">% Gan</TableHead>
                 </TableRow>
@@ -98,7 +100,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                       {formatCurrency(item.ventaTotal)}
                     </TableCell>
                     <TableCell className="text-center font-medium text-warning">
-                      {formatCurrency(item.ivaTotal)}
+                      {formatCurrency(item.ivaAPagar)}
                     </TableCell>
                     <TableCell className="text-center font-bold text-success border-l-2 border-border">
                       {formatCurrency(item.ganancia)}
@@ -137,7 +139,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
         <Card className="text-center">
           <CardContent className="pt-6">
             <Calculator className="w-8 h-8 mx-auto mb-2 text-warning" />
-            <p className="text-sm text-muted-foreground">IVA Total</p>
+            <p className="text-sm text-muted-foreground">IVA a Pagar (Neto)</p>
             <p className="text-2xl font-bold text-warning">{formatCurrency(totales.iva)}</p>
           </CardContent>
         </Card>

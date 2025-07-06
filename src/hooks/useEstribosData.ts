@@ -320,7 +320,9 @@ export const useEstribosData = () => {
           costoTotal1000: calculo.costoBase * 1000,
           ventaTotal1000SinIva: calculo.precioFinalSinIva * 1000,
           ventaTotal1000ConIva: calculo.precioFinalConIva * 1000,
-          ivaTotal1000: calculo.ivaAmount * 1000,
+          ivaDebito1000: calculo.ivaAmount * 1000, // IVA de la venta
+          ivaCredito1000: (calculo.costoBase * 1000) * (21 / 121), // IVA incluido en el costo
+          ivaAPagar1000: (calculo.ivaAmount * 1000) - ((calculo.costoBase * 1000) * (21 / 121)), // IVA neto a pagar
           gananciaTotal1000: (calculo.precioFinalSinIva - calculo.costoBase) * 1000
         }))
       };
