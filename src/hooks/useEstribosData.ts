@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export interface Proveedor {
   id: string;
@@ -28,75 +30,247 @@ export interface CalculoDetallado {
 }
 
 export const useEstribosData = () => {
-  const [proveedores, setProveedores] = useState<Proveedor[]>([
-    { id: '1', nombre: 'Proveedor Enrique', precioPorKg: 2500 },
-    { id: '2', nombre: 'Proveedor Chino', precioPorKg: 1353.71 }
-  ]);
-
-  const [estribos, setEstribos] = useState<Estribo[]>([
-    { 
-      id: '1', 
-      medida: '10x10 cm', 
-      pesosPorProveedor: { 
-        '1': 0.0350, // Proveedor Enrique
-        '2': 0.0350  // Proveedor Chino (mismo peso por defecto)
-      } 
-    },
-    { 
-      id: '2', 
-      medida: '12x12 cm', 
-      pesosPorProveedor: { 
-        '1': 0.0404,
-        '2': 0.0404 
-      } 
-    },
-    { 
-      id: '3', 
-      medida: '15x15 cm', 
-      pesosPorProveedor: { 
-        '1': 0.0485,
-        '2': 0.0485 
-      } 
-    },
-    { 
-      id: '4', 
-      medida: '10x15 cm', 
-      pesosPorProveedor: { 
-        '1': 0.0418,
-        '2': 0.0418 
-      } 
-    },
-    { 
-      id: '5', 
-      medida: '20x20 cm', 
-      pesosPorProveedor: { 
-        '1': 0.0620,
-        '2': 0.0620 
-      } 
-    }
-  ]);
-
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [estribos, setEstribos] = useState<Estribo[]>([]);
   const [configuracion, setConfiguracion] = useState<ConfiguracionVenta>({
     margenGanancia: 90,
     iva: 21
   });
+  const [loading, setLoading] = useState(true);
 
-  const agregarProveedor = (proveedor: Omit<Proveedor, 'id'>) => {
-    const nuevoProveedor = { ...proveedor, id: Date.now().toString() };
-    setProveedores(prev => [...prev, nuevoProveedor]);
+  // Cargar datos desde Supabase al inicializar
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar proveedores
+      const { data: proveedoresData, error: proveedoresError } = await supabase
+        .from('proveedores')
+        .select('*')
+        .order('nombre');
+      
+      if (proveedoresError) throw proveedoresError;
+      
+      // Cargar estribos con sus pesos
+      const { data: estribosData, error: estribosError } = await supabase
+        .from('estribos')
+        .select(`
+          *,
+          estribo_pesos (
+            proveedor_id,
+            peso
+          )
+        `)
+        .order('medida');
+      
+      if (estribosError) throw estribosError;
+      
+      // Cargar configuración
+      const { data: configData, error: configError } = await supabase
+        .from('configuracion_venta')
+        .select('*')
+        .single();
+      
+      if (configError) throw configError;
+      
+      // Transformar datos
+      const proveedoresTransformados: Proveedor[] = proveedoresData?.map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        precioPorKg: Number(p.precio_por_kg)
+      })) || [];
+      
+      const estribosTransformados: Estribo[] = estribosData?.map(e => ({
+        id: e.id,
+        medida: e.medida,
+        pesosPorProveedor: e.estribo_pesos?.reduce((acc: any, peso: any) => {
+          acc[peso.proveedor_id] = Number(peso.peso);
+          return acc;
+        }, {}) || {}
+      })) || [];
+      
+      setProveedores(proveedoresTransformados);
+      setEstribos(estribosTransformados);
+      setConfiguracion({
+        margenGanancia: Number(configData?.margen_ganancia || 90),
+        iva: Number(configData?.iva || 21)
+      });
+      
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los datos desde la base de datos",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const agregarEstribo = (estribo: Omit<Estribo, 'id'>) => {
-    const nuevoEstribo = { ...estribo, id: Date.now().toString() };
-    setEstribos(prev => [...prev, nuevoEstribo]);
+  const agregarProveedor = async (proveedor: Omit<Proveedor, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('proveedores')
+        .insert({
+          nombre: proveedor.nombre,
+          precio_por_kg: proveedor.precioPorKg
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      const nuevoProveedor: Proveedor = {
+        id: data.id,
+        nombre: data.nombre,
+        precioPorKg: Number(data.precio_por_kg)
+      };
+      
+      setProveedores(prev => [...prev, nuevoProveedor]);
+      
+      toast({
+        title: "Éxito",
+        description: "Proveedor agregado correctamente"
+      });
+    } catch (error) {
+      console.error('Error agregando proveedor:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el proveedor",
+        variant: "destructive"
+      });
+    }
   };
 
-  const eliminarProveedor = (id: string) => {
-    setProveedores(prev => prev.filter(p => p.id !== id));
+  const agregarEstribo = async (estribo: Omit<Estribo, 'id'>) => {
+    try {
+      // Insertar estribo
+      const { data: estriboDatos, error: estribosError } = await supabase
+        .from('estribos')
+        .insert({
+          medida: estribo.medida
+        })
+        .select()
+        .single();
+      
+      if (estribosError) throw estribosError;
+      
+      // Insertar pesos por proveedor
+      const pesosData = Object.entries(estribo.pesosPorProveedor).map(([proveedorId, peso]) => ({
+        estribo_id: estriboDatos.id,
+        proveedor_id: proveedorId,
+        peso: peso
+      }));
+      
+      const { error: pesosError } = await supabase
+        .from('estribo_pesos')
+        .insert(pesosData);
+      
+      if (pesosError) throw pesosError;
+      
+      const nuevoEstribo: Estribo = {
+        id: estriboDatos.id,
+        medida: estriboDatos.medida,
+        pesosPorProveedor: estribo.pesosPorProveedor
+      };
+      
+      setEstribos(prev => [...prev, nuevoEstribo]);
+      
+      toast({
+        title: "Éxito",
+        description: "Estribo agregado correctamente"
+      });
+    } catch (error) {
+      console.error('Error agregando estribo:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el estribo",
+        variant: "destructive"
+      });
+    }
   };
 
-  const eliminarEstribo = (id: string) => {
-    setEstribos(prev => prev.filter(e => e.id !== id));
+  const eliminarProveedor = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('proveedores')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setProveedores(prev => prev.filter(p => p.id !== id));
+      
+      toast({
+        title: "Éxito",
+        description: "Proveedor eliminado correctamente"
+      });
+    } catch (error) {
+      console.error('Error eliminando proveedor:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el proveedor",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const eliminarEstribo = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('estribos')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setEstribos(prev => prev.filter(e => e.id !== id));
+      
+      toast({
+        title: "Éxito",
+        description: "Estribo eliminado correctamente"
+      });
+    } catch (error) {
+      console.error('Error eliminando estribo:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el estribo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const actualizarConfiguracion = async (nuevaConfiguracion: ConfiguracionVenta) => {
+    try {
+      const { error } = await supabase
+        .from('configuracion_venta')
+        .update({
+          margen_ganancia: nuevaConfiguracion.margenGanancia,
+          iva: nuevaConfiguracion.iva
+        })
+        .eq('id', (await supabase.from('configuracion_venta').select('id').single()).data?.id);
+      
+      if (error) throw error;
+      
+      setConfiguracion(nuevaConfiguracion);
+      
+      toast({
+        title: "Éxito",
+        description: "Configuración actualizada correctamente"
+      });
+    } catch (error) {
+      console.error('Error actualizando configuración:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la configuración",
+        variant: "destructive"
+      });
+    }
   };
 
   const calcularDatos = (): CalculoDetallado[] => {
@@ -156,12 +330,15 @@ export const useEstribosData = () => {
     proveedores,
     estribos,
     configuracion,
+    loading,
     setConfiguracion,
     agregarProveedor,
     agregarEstribo,
     eliminarProveedor,
     eliminarEstribo,
+    actualizarConfiguracion,
     calcularDatos,
-    calcularSimulacionVentas
+    calcularSimulacionVentas,
+    cargarDatos
   };
 };

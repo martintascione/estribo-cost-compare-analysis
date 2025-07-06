@@ -9,7 +9,117 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      configuracion_venta: {
+        Row: {
+          created_at: string
+          id: string
+          iva: number
+          margen_ganancia: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          iva?: number
+          margen_ganancia?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          iva?: number
+          margen_ganancia?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      estribo_pesos: {
+        Row: {
+          created_at: string
+          estribo_id: string
+          id: string
+          peso: number
+          proveedor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estribo_id: string
+          id?: string
+          peso: number
+          proveedor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estribo_id?: string
+          id?: string
+          peso?: number
+          proveedor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estribo_pesos_estribo_id_fkey"
+            columns: ["estribo_id"]
+            isOneToOne: false
+            referencedRelation: "estribos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estribo_pesos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estribos: {
+        Row: {
+          created_at: string
+          id: string
+          medida: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medida: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medida?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proveedores: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+          precio_por_kg: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+          precio_por_kg: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+          precio_por_kg?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
