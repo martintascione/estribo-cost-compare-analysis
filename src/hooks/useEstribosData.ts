@@ -314,17 +314,25 @@ export const useEstribosData = () => {
           medida: estribo.medida,
           peso: 0 // Ya no necesitamos este campo genérico
         },
-        proveedores: calculosEstribo.map(calculo => ({
-          proveedor: calculo.proveedor,
-          peso: calculo.estribo.peso, // Peso específico del proveedor
-          costoTotal1000: calculo.costoBase * 1000,
-          ventaTotal1000SinIva: calculo.precioFinalSinIva * 1000,
-          ventaTotal1000ConIva: calculo.precioFinalConIva * 1000,
-          ivaDebito1000: calculo.ivaAmount * 1000, // IVA de la venta
-          ivaCredito1000: (calculo.costoBase * 1000) * (21 / 121), // IVA incluido en el costo
-          ivaAPagar1000: (calculo.ivaAmount * 1000) - ((calculo.costoBase * 1000) * (21 / 121)), // IVA neto a pagar
-          gananciaTotal1000: (calculo.precioFinalSinIva - calculo.costoBase) * 1000
-        }))
+        proveedores: calculosEstribo.map(calculo => {
+          const costoTotal1000 = calculo.costoBase * 1000;
+          const ventaTotal1000ConIva = calculo.precioFinalConIva * 1000;
+          const ivaDebito1000 = calculo.ivaAmount * 1000;
+          const ivaCredito1000 = costoTotal1000 * (21 / 121);
+          const ivaAPagar1000 = ivaDebito1000 - ivaCredito1000;
+          
+          return {
+            proveedor: calculo.proveedor,
+            peso: calculo.estribo.peso,
+            costoTotal1000,
+            ventaTotal1000SinIva: calculo.precioFinalSinIva * 1000,
+            ventaTotal1000ConIva,
+            ivaDebito1000,
+            ivaCredito1000,
+            ivaAPagar1000,
+            gananciaTotal1000: ventaTotal1000ConIva - costoTotal1000 - ivaAPagar1000 // Venta - Costo - IVA Neto
+          };
+        })
       };
     });
   };
