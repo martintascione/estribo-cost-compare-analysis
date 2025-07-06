@@ -37,11 +37,11 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
     return acc;
   }, [] as any[]);
 
-  // Datos para el gráfico
+  // Datos para el gráfico de barras - costo de fabricación sin margen
   const datosGrafico = datosAgrupados.map(item => {
     const resultado: any = { medida: item.medida };
     item.proveedores.forEach((prov: any) => {
-      resultado[prov.nombre] = prov.precioConIva;
+      resultado[prov.nombre] = prov.costoBase; // Solo costo de fabricación
     });
     return resultado;
   });
@@ -69,16 +69,16 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
 
   const diferenciaPorcentualKg = ((proveedorMasCaroKg.precioPorKg - proveedorMasEconomicoKg.precioPorKg) / proveedorMasCaroKg.precioPorKg * 100).toFixed(1);
 
-  // Análisis de precios finales por unidad (promedio)
+  // Análisis de costos de fabricación por unidad (promedio)
   const promediosPorProveedor = calculos.reduce((acc, calculo) => {
     const existente = acc.find(item => item.nombre === calculo.proveedor.nombre);
     if (existente) {
-      existente.totalPrecios += calculo.precioFinalConIva;
+      existente.totalCostos += calculo.costoBase; // Solo costo base
       existente.count += 1;
     } else {
       acc.push({
         nombre: calculo.proveedor.nombre,
-        totalPrecios: calculo.precioFinalConIva,
+        totalCostos: calculo.costoBase,
         count: 1
       });
     }
@@ -87,7 +87,7 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
 
   const promediosFinales = promediosPorProveedor.map(prov => ({
     ...prov,
-    promedio: prov.totalPrecios / prov.count
+    promedio: prov.totalCostos / prov.count
   }));
 
   const proveedorMasEconomicoUnidad = promediosFinales.reduce((min, prov) => 
@@ -128,14 +128,14 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-primary" />
-              Precios Finales por Unidad
+              Costo de Fabricación por Unidad
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Comparación de precios finales de venta al público por estribo (incluye margen + IVA)
+              Costo base de fabricación de cada estribo por proveedor (sin margen ni IVA)
             </p>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-sm font-medium">
-                📊 Análisis: {proveedorMasEconomicoUnidad.nombre} es {diferenciaPorcentualUnidad}% más económico por unidad que {proveedorMasCaroUnidad.nombre} (incluye margen de fabricación)
+                📊 Análisis: {proveedorMasEconomicoUnidad.nombre} tiene un costo de fabricación {diferenciaPorcentualUnidad}% más bajo por unidad que {proveedorMasCaroUnidad.nombre}
               </p>
             </div>
           </CardHeader>
@@ -154,7 +154,7 @@ export const ComparacionPrecios = ({ calculos }: Props) => {
                 />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
-                  formatter={(value: number) => [formatCurrency(value), "Precio Final"]}
+                  formatter={(value: number) => [formatCurrency(value), "Costo de Fabricación"]}
                 />
                 {Object.keys(chartConfig).map((proveedorNombre, index) => (
                   <Bar 
