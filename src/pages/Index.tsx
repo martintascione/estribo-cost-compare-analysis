@@ -54,7 +54,7 @@ const Index = () => {
             <Calculator className="w-5 h-5 text-primary" />
             <span className="text-sm font-medium text-primary">Sistema de Análisis de Costos</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
             Calculadora de Estribos
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
