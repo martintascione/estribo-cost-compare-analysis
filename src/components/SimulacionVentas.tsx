@@ -77,7 +77,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
                   <TableHead className="font-bold text-center">Venta Total<br/><span className="text-xs font-normal">(con IVA)</span></TableHead>
                   <TableHead className="font-bold text-center">IVA Total</TableHead>
                   <TableHead className="font-bold text-center border-l-2 border-border">Ganancia</TableHead>
-                  <TableHead className="font-bold text-center">ROI %</TableHead>
+                  <TableHead className="font-bold text-center">% Gan</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,7 +147,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
             <p className="text-sm text-muted-foreground">Ganancia Total</p>
             <p className="text-2xl font-bold text-success">{formatCurrency(totales.ganancia)}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              ROI Promedio: {((totales.ganancia / totales.costo) * 100).toFixed(1)}%
+              % Gan Promedio: {((totales.ganancia / totales.costo) * 100).toFixed(1)}%
             </p>
           </CardContent>
         </Card>
