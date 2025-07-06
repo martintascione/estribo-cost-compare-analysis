@@ -8,6 +8,7 @@ interface SimulacionData {
   estribo: { medida: string; peso: number };
   proveedores: Array<{
     proveedor: { nombre: string };
+    peso: number; // Peso específico por proveedor
     costoTotal1000: number;
     ventaTotal1000SinIva: number;
     ventaTotal1000ConIva: number;
@@ -25,7 +26,7 @@ export const SimulacionVentas = ({ simulacion }: Props) => {
   const datosSimplificados = simulacion.flatMap(item => 
     item.proveedores.map(prov => ({
       medida: item.estribo.medida,
-      peso: item.estribo.peso,
+      peso: prov.peso, // Usar el peso específico del proveedor
       proveedor: prov.proveedor.nombre,
       costoTotal: prov.costoTotal1000,
       ventaTotal: prov.ventaTotal1000ConIva,

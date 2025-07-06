@@ -312,10 +312,11 @@ export const useEstribosData = () => {
       return {
         estribo: {
           medida: estribo.medida,
-          peso: calculosEstribo[0]?.estribo.peso || 0 // Usar el peso del primer cálculo como referencia
+          peso: 0 // Ya no necesitamos este campo genérico
         },
         proveedores: calculosEstribo.map(calculo => ({
           proveedor: calculo.proveedor,
+          peso: calculo.estribo.peso, // Peso específico del proveedor
           costoTotal1000: calculo.costoBase * 1000,
           ventaTotal1000SinIva: calculo.precioFinalSinIva * 1000,
           ventaTotal1000ConIva: calculo.precioFinalConIva * 1000,
