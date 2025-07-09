@@ -249,7 +249,10 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Análisis Detallado de Precios</CardTitle>
-          <div className="flex items-center space-x-2">
+          <p className="text-sm text-muted-foreground mt-2">
+            En ambos cuadros, se tiene en cuenta tu margen de ganancia ingresado anteriormente.
+          </p>
+          <div className="flex items-center space-x-2 mt-3">
             <Switch
               id="discriminar-iva"
               checked={discriminarIva}
@@ -282,83 +285,75 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
                     </span>
                   </div>
                   
-                  <div className="overflow-x-auto -mx-2 sm:mx-0">
-                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="font-bold text-xs sm:text-sm px-2">Medida</TableHead>
-                        <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden sm:table-cell">
-                          Peso (kg)
-                        </TableHead>
-                        <TableHead className="font-bold text-center text-xs sm:text-sm px-2">
-                          Costo
-                          <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
-                        </TableHead>
-                        {discriminarIva && (
-                          <TableHead className="font-bold text-center border-r-2 border-border text-xs sm:text-sm px-1 hidden md:table-cell">IVA Créd.</TableHead>
-                        )}
-                        <TableHead className={`font-bold text-center text-xs sm:text-sm px-2 ${discriminarIva ? 'border-l-2 border-border' : ''}`}>
-                          Venta
-                          <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
-                        </TableHead>
-                        {discriminarIva && (
-                          <>
-                            <TableHead className="font-bold text-center text-xs sm:text-sm px-1 hidden md:table-cell">IVA Déb.</TableHead>
-                            <TableHead className="font-bold text-center text-xs sm:text-sm px-1 hidden lg:table-cell">IVA Pagar</TableHead>
-                          </>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {calculosProveedor.map((calculo, index) => {
-                        // Calcular IVA crédito del costo base (que incluye IVA)
-                        const ivaCredito = calculo.costoBase * (21 / 121); // IVA incluido en el costo base
-                        const ivaAPagar = calculo.ivaAmount - ivaCredito; // IVA a pagar = IVA débito - IVA crédito
-                        
-                        return (
-                          <TableRow key={index} className="hover:bg-muted/50">
-                            <TableCell className="font-semibold text-xs sm:text-sm px-2">{calculo.estribo.medida}</TableCell>
-                            <TableCell className="text-center text-xs sm:text-sm px-2 hidden sm:table-cell">{calculo.estribo.peso.toFixed(4)}</TableCell>
-                            <TableCell className="text-center font-medium text-xs sm:text-sm px-2">
-                              {formatCurrency(calculo.costoBase)}
-                            </TableCell>
-                            {discriminarIva && (
-                              <TableCell className="text-center text-green-600 text-xs sm:text-sm px-1 hidden md:table-cell">
-                                {formatCurrency(ivaCredito)}
-                              </TableCell>
-                            )}
-                            <TableCell className="text-center font-medium text-primary text-xs sm:text-sm px-2">
-                              {formatCurrency(calculo.precioFinalConIva)}
-                            </TableCell>
-                            {discriminarIva && (
-                              <>
-                                <TableCell className="text-center text-orange-600 text-xs sm:text-sm px-1 hidden md:table-cell">
-                                  {formatCurrency(calculo.ivaAmount)}
-                                </TableCell>
-                                <TableCell className="text-center font-bold text-red-600 text-xs sm:text-sm px-1 hidden lg:table-cell">
-                                  {formatCurrency(ivaAPagar)}
-                                </TableCell>
-                              </>
-                            )}
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                    </Table>
-                  </div>
+                   <div className="overflow-x-auto -mx-2 sm:mx-0 max-w-full">
+                    <Table className={discriminarIva ? "min-w-[600px]" : "min-w-[400px]"}>
+                     <TableHeader>
+                       <TableRow>
+                         <TableHead className="font-bold text-xs sm:text-sm px-2 min-w-[60px]">Medida</TableHead>
+                         <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden sm:table-cell min-w-[80px]">
+                           Peso (kg)
+                         </TableHead>
+                         <TableHead className="font-bold text-center text-xs sm:text-sm px-2 min-w-[80px]">
+                           Costo
+                           <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
+                         </TableHead>
+                         {discriminarIva && (
+                           <TableHead className="font-bold text-center border-r-2 border-border text-xs sm:text-sm px-1 min-w-[80px]">IVA Créd.</TableHead>
+                         )}
+                         <TableHead className={`font-bold text-center text-xs sm:text-sm px-2 min-w-[80px] ${discriminarIva ? 'border-l-2 border-border' : ''}`}>
+                           Venta
+                           <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
+                         </TableHead>
+                         {discriminarIva && (
+                           <>
+                             <TableHead className="font-bold text-center text-xs sm:text-sm px-1 min-w-[80px]">IVA Déb.</TableHead>
+                             <TableHead className="font-bold text-center text-xs sm:text-sm px-1 min-w-[80px]">IVA Pagar</TableHead>
+                           </>
+                         )}
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {calculosProveedor.map((calculo, index) => {
+                         // Calcular IVA crédito del costo base (que incluye IVA)
+                         const ivaCredito = calculo.costoBase * (21 / 121); // IVA incluido en el costo base
+                         const ivaAPagar = calculo.ivaAmount - ivaCredito; // IVA a pagar = IVA débito - IVA crédito
+                         
+                         return (
+                           <TableRow key={index} className="hover:bg-muted/50">
+                             <TableCell className="font-semibold text-xs sm:text-sm px-2">{calculo.estribo.medida}</TableCell>
+                             <TableCell className="text-center text-xs sm:text-sm px-2 hidden sm:table-cell">{calculo.estribo.peso.toFixed(4)}</TableCell>
+                             <TableCell className="text-center font-medium text-xs sm:text-sm px-2">
+                               {formatCurrency(calculo.costoBase)}
+                             </TableCell>
+                             {discriminarIva && (
+                               <TableCell className="text-center text-green-600 text-xs sm:text-sm px-1">
+                                 {formatCurrency(ivaCredito)}
+                               </TableCell>
+                             )}
+                             <TableCell className="text-center font-medium text-primary text-xs sm:text-sm px-2">
+                               {formatCurrency(calculo.precioFinalConIva)}
+                             </TableCell>
+                             {discriminarIva && (
+                               <>
+                                 <TableCell className="text-center text-orange-600 text-xs sm:text-sm px-1">
+                                   {formatCurrency(calculo.ivaAmount)}
+                                 </TableCell>
+                                 <TableCell className="text-center font-bold text-red-600 text-xs sm:text-sm px-1">
+                                   {formatCurrency(ivaAPagar)}
+                                 </TableCell>
+                               </>
+                             )}
+                           </TableRow>
+                         );
+                       })}
+                     </TableBody>
+                     </Table>
+                   </div>
                 </div>
               );
             })}
           </div>
           
-          {/* Mensaje informativo para móviles cuando IVA está discriminado */}
-          {discriminarIva && (
-            <div className="md:hidden mt-4 p-3 bg-muted/30 rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                💡 En pantallas pequeñas se muestran las columnas principales. Para ver IVA Crédito y Débito, usa una pantalla mediana o más grande.
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
