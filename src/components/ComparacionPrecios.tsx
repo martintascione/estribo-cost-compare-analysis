@@ -295,16 +295,16 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
                           <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
                         </TableHead>
                         {discriminarIva && (
-                          <TableHead className="font-bold text-center border-r-2 border-border text-xs sm:text-sm px-2 hidden lg:table-cell">IVA Créd.</TableHead>
+                          <TableHead className="font-bold text-center border-r-2 border-border text-xs sm:text-sm px-1 hidden md:table-cell">IVA Créd.</TableHead>
                         )}
-                        <TableHead className={`font-bold text-center text-xs sm:text-sm px-2 ${discriminarIva ? 'border-l-2 border-border hidden lg:table-cell' : ''}`}>
+                        <TableHead className={`font-bold text-center text-xs sm:text-sm px-2 ${discriminarIva ? 'border-l-2 border-border' : ''}`}>
                           Venta
                           <div className="text-xs font-normal text-muted-foreground hidden sm:block">con IVA</div>
                         </TableHead>
                         {discriminarIva && (
                           <>
-                            <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden lg:table-cell">IVA Déb.</TableHead>
-                            <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden lg:table-cell">IVA Pagar</TableHead>
+                            <TableHead className="font-bold text-center text-xs sm:text-sm px-1 hidden md:table-cell">IVA Déb.</TableHead>
+                            <TableHead className="font-bold text-center text-xs sm:text-sm px-1 hidden lg:table-cell">IVA Pagar</TableHead>
                           </>
                         )}
                       </TableRow>
@@ -323,19 +323,19 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
                               {formatCurrency(calculo.costoBase)}
                             </TableCell>
                             {discriminarIva && (
-                              <TableCell className="text-center text-green-600 text-xs sm:text-sm px-2 hidden lg:table-cell">
+                              <TableCell className="text-center text-green-600 text-xs sm:text-sm px-1 hidden md:table-cell">
                                 {formatCurrency(ivaCredito)}
                               </TableCell>
                             )}
-                            <TableCell className={`text-center font-medium text-primary text-xs sm:text-sm px-2 ${discriminarIva ? 'hidden lg:table-cell' : ''}`}>
+                            <TableCell className="text-center font-medium text-primary text-xs sm:text-sm px-2">
                               {formatCurrency(calculo.precioFinalConIva)}
                             </TableCell>
                             {discriminarIva && (
                               <>
-                                <TableCell className="text-center text-orange-600 text-xs sm:text-sm px-2 hidden lg:table-cell">
+                                <TableCell className="text-center text-orange-600 text-xs sm:text-sm px-1 hidden md:table-cell">
                                   {formatCurrency(calculo.ivaAmount)}
                                 </TableCell>
-                                <TableCell className="text-center font-bold text-red-600 text-xs sm:text-sm px-2 hidden lg:table-cell">
+                                <TableCell className="text-center font-bold text-red-600 text-xs sm:text-sm px-1 hidden lg:table-cell">
                                   {formatCurrency(ivaAPagar)}
                                 </TableCell>
                               </>
@@ -353,9 +353,9 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
           
           {/* Mensaje informativo para móviles cuando IVA está discriminado */}
           {discriminarIva && (
-            <div className="lg:hidden mt-4 p-3 bg-muted/30 rounded-lg">
+            <div className="md:hidden mt-4 p-3 bg-muted/30 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                💡 En pantallas pequeñas solo se muestran las columnas principales. Usa una pantalla más grande para ver el desglose completo del IVA.
+                💡 En pantallas pequeñas se muestran las columnas principales. Para ver IVA Crédito y Débito, usa una pantalla mediana o más grande.
               </p>
             </div>
           )}
