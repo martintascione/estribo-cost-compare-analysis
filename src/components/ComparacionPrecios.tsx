@@ -148,38 +148,43 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
               </p>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ChartContainer config={chartConfig} className="h-60 sm:h-80">
-              <BarChart data={datosGrafico} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="medida" 
-                  tick={{ fontSize: 10 }}
-                  stroke="hsl(var(--muted-foreground))"
-                  interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  tick={{ fontSize: 10 }}
-                  stroke="hsl(var(--muted-foreground))"
-                  width={60}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number) => [formatCurrency(value), "Costo"]}
-                />
-                {Object.keys(chartConfig).map((proveedorNombre, index) => (
-                  <Bar 
-                    key={proveedorNombre}
-                    dataKey={proveedorNombre} 
-                    fill={chartConfig[proveedorNombre].color}
-                    radius={[2, 2, 0, 0]}
+          <CardContent className="pt-0 px-2 sm:px-6">
+            <div className="w-full overflow-hidden">
+              <ChartContainer config={chartConfig} className="h-60 sm:h-80 w-full max-w-full">
+                <BarChart 
+                  data={datosGrafico} 
+                  margin={{ top: 10, right: 2, left: 2, bottom: 40 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="medida" 
+                    tick={{ fontSize: 8 }}
+                    stroke="hsl(var(--muted-foreground))"
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={40}
                   />
-                ))}
-              </BarChart>
-            </ChartContainer>
+                  <YAxis 
+                    tick={{ fontSize: 8 }}
+                    stroke="hsl(var(--muted-foreground))"
+                    width={30}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    formatter={(value: number) => [formatCurrency(value), "Costo"]}
+                  />
+                  {Object.keys(chartConfig).map((proveedorNombre, index) => (
+                    <Bar 
+                      key={proveedorNombre}
+                      dataKey={proveedorNombre} 
+                      fill={chartConfig[proveedorNombre].color}
+                      radius={[2, 2, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -199,29 +204,43 @@ export const ComparacionPrecios = ({ calculos, calculosPorUnidad = [] }: Props) 
               </p>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ChartContainer config={pieChartConfig} className="h-60 sm:h-80">
-              <PieChart>
-                <Pie
-                  data={proveedoresUnicos}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={window.innerWidth < 640 ? 70 : 100}
-                  dataKey="precioPorKg"
-                  nameKey="nombre"
-                  label={({ nombre, precioPorKg }) => window.innerWidth < 640 ? `${formatCurrency(precioPorKg)}` : `${nombre}: ${formatCurrency(precioPorKg)}`}
-                  labelLine={false}
-                >
-                  {proveedoresUnicos.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number) => [formatCurrency(value), "Precio por Kg"]}
-                />
-              </PieChart>
-            </ChartContainer>
+          <CardContent className="pt-0 px-2 sm:px-6">
+            <div className="w-full overflow-hidden flex justify-center">
+              <ChartContainer config={pieChartConfig} className="h-60 sm:h-80 w-full max-w-full">
+                <PieChart>
+                  <Pie
+                    data={proveedoresUnicos}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="40%"
+                    dataKey="precioPorKg"
+                    nameKey="nombre"
+                    label={false}
+                    labelLine={false}
+                  >
+                    {proveedoresUnicos.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    formatter={(value: number, name: string) => [formatCurrency(value), name]}
+                  />
+                </PieChart>
+              </ChartContainer>
+            </div>
+            {/* Leyenda manual para el gráfico de torta */}
+            <div className="flex flex-wrap justify-center gap-2 mt-2">
+              {proveedoresUnicos.map((proveedor, index) => (
+                <div key={proveedor.nombre} className="flex items-center gap-1 text-xs">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <span>{proveedor.nombre}: {formatCurrency(proveedor.precioPorKg)}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
