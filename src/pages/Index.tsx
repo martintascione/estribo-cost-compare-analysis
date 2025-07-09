@@ -64,18 +64,18 @@ const Index = () => {
 
         {/* Tabs principales */}
         <Tabs defaultValue="configuracion" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto">
-            <TabsTrigger value="configuracion" className="flex-col gap-1 py-3">
-              <span className="font-medium">Configuración</span>
-              <span className="text-xs text-muted-foreground">Datos de entrada</span>
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto gap-1">
+            <TabsTrigger value="configuracion" className="flex-col gap-1 py-2 px-2 text-center">
+              <span className="font-medium text-sm">Configuración</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">Datos de entrada</span>
             </TabsTrigger>
-            <TabsTrigger value="analisis" className="flex-col gap-1 py-3">
-              <span className="font-medium">Análisis</span>
-              <span className="text-xs text-muted-foreground">Comparación y precios</span>
+            <TabsTrigger value="analisis" className="flex-col gap-1 py-2 px-2 text-center">
+              <span className="font-medium text-sm">Análisis</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">Comparación y precios</span>
             </TabsTrigger>
-            <TabsTrigger value="simulacion" className="flex-col gap-1 py-3">
-              <span className="font-medium">Simulación</span>
-              <span className="text-xs text-muted-foreground">Ventas masivas</span>
+            <TabsTrigger value="simulacion" className="flex-col gap-1 py-2 px-2 text-center">
+              <span className="font-medium text-sm">Simulación</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">Ventas masivas</span>
             </TabsTrigger>
           </TabsList>
 

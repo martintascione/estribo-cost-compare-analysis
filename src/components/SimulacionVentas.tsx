@@ -120,10 +120,10 @@ export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props
 
       {/* Tabla principal */}
       <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/30">
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Resultados Detallados por Medida y Proveedor
+        <CardHeader className="bg-muted/30 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base">Resultados Detallados</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -131,40 +131,54 @@ export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-bold text-center">Medida</TableHead>
-                  <TableHead className="font-bold text-center">Proveedor</TableHead>
-                  <TableHead className="font-bold text-center">Peso Total<br/><span className="text-xs font-normal">(1,000 unidades)</span></TableHead>
-                  <TableHead className="font-bold text-center border-l-2 border-border">Costo Total</TableHead>
-                  <TableHead className="font-bold text-center">Venta Total<br/><span className="text-xs font-normal">(con IVA)</span></TableHead>
-                  <TableHead className="font-bold text-center">IVA a Pagar<br/><span className="text-xs font-normal">(neto)</span></TableHead>
-                  <TableHead className="font-bold text-center border-l-2 border-border">Ganancia</TableHead>
-                  <TableHead className="font-bold text-center">% Gan</TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2">Medida</TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden sm:table-cell">Proveedor</TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden lg:table-cell">
+                    Peso Total
+                    <div className="text-xs font-normal">(1,000 u)</div>
+                  </TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2">Costo</TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2">
+                    Venta
+                    <div className="text-xs font-normal hidden sm:block">(con IVA)</div>
+                  </TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2 hidden md:table-cell">
+                    IVA Pagar
+                    <div className="text-xs font-normal">(neto)</div>
+                  </TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2">Ganancia</TableHead>
+                  <TableHead className="font-bold text-center text-xs sm:text-sm px-2">% Gan</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {datosSimplificados.map((item, index) => (
                   <TableRow key={index} className="hover:bg-muted/30">
-                    <TableCell className="text-center font-semibold">{item.medida}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline">{item.proveedor}</Badge>
+                    <TableCell className="text-center font-semibold text-xs sm:text-sm px-2">
+                      {item.medida}
+                      <div className="sm:hidden text-xs text-muted-foreground">
+                        {item.proveedor}
+                      </div>
                     </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
+                    <TableCell className="text-center text-xs sm:text-sm px-2 hidden sm:table-cell">
+                      <Badge variant="outline" className="text-xs">{item.proveedor}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground text-xs sm:text-sm px-2 hidden lg:table-cell">
                       {(item.peso * 1000).toFixed(1)} kg
                     </TableCell>
-                    <TableCell className="text-center font-medium text-destructive border-l-2 border-border">
+                    <TableCell className="text-center font-medium text-destructive text-xs sm:text-sm px-2">
                       {formatCurrency(item.costoTotal)}
                     </TableCell>
-                    <TableCell className="text-center font-medium text-primary">
+                    <TableCell className="text-center font-medium text-primary text-xs sm:text-sm px-2">
                       {formatCurrency(item.ventaTotal)}
                     </TableCell>
-                    <TableCell className="text-center font-medium text-warning">
+                    <TableCell className="text-center font-medium text-warning text-xs sm:text-sm px-2 hidden md:table-cell">
                       {formatCurrency(item.ivaAPagar)}
                     </TableCell>
-                    <TableCell className="text-center font-bold text-success border-l-2 border-border">
+                    <TableCell className="text-center font-bold text-success text-xs sm:text-sm px-2">
                       {formatCurrency(item.ganancia)}
                     </TableCell>
-                    <TableCell className="text-center font-bold">
-                      <Badge variant={item.roi > 50 ? "default" : "secondary"}>
+                    <TableCell className="text-center font-bold text-xs sm:text-sm px-2">
+                      <Badge variant={item.roi > 50 ? "default" : "secondary"} className="text-xs">
                         {item.roi.toFixed(1)}%
                       </Badge>
                     </TableCell>
@@ -172,6 +186,11 @@ export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props
                 ))}
               </TableBody>
             </Table>
+          </div>
+          
+          {/* Información para móviles */}
+          <div className="md:hidden p-3 bg-muted/30 text-xs text-muted-foreground">
+            💡 Algunas columnas están ocultas en pantallas pequeñas. Usa una pantalla más grande para ver todos los detalles.
           </div>
         </CardContent>
       </Card>
@@ -198,29 +217,29 @@ export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props
       </Card>
 
       {/* Resumen de totales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <Card className="text-center">
-          <CardContent className="pt-6">
-            <DollarSign className="w-8 h-8 mx-auto mb-2 text-destructive" />
-            <p className="text-sm text-muted-foreground">Costo Total</p>
-            <p className="text-2xl font-bold text-destructive">{formatCurrency(totales.costo)}</p>
+          <CardContent className="pt-3 sm:pt-6 pb-3 sm:pb-6 px-2 sm:px-6">
+            <DollarSign className="w-5 h-5 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-destructive" />
+            <p className="text-xs sm:text-sm text-muted-foreground">Costo Total</p>
+            <p className="text-sm sm:text-2xl font-bold text-destructive">{formatCurrency(totales.costo)}</p>
           </CardContent>
         </Card>
         
         <Card className="text-center">
-          <CardContent className="pt-6">
-            <ArrowRight className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="text-sm text-muted-foreground">Venta Total</p>
-            <p className="text-2xl font-bold text-primary">{formatCurrency(totales.venta)}</p>
+          <CardContent className="pt-3 sm:pt-6 pb-3 sm:pb-6 px-2 sm:px-6">
+            <ArrowRight className="w-5 h-5 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-primary" />
+            <p className="text-xs sm:text-sm text-muted-foreground">Venta Total</p>
+            <p className="text-sm sm:text-2xl font-bold text-primary">{formatCurrency(totales.venta)}</p>
           </CardContent>
         </Card>
         
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <Calculator className="w-8 h-8 mx-auto mb-2 text-warning" />
-            <p className="text-sm text-muted-foreground">IVA a Pagar (Neto)</p>
-            <p className="text-2xl font-bold text-warning">{formatCurrency(totales.ivaAPagar)}</p>
-            <div className="text-xs text-muted-foreground mt-2 space-y-1">
+        <Card className="text-center lg:col-span-1 col-span-2">
+          <CardContent className="pt-3 sm:pt-6 pb-3 sm:pb-6 px-2 sm:px-6">
+            <Calculator className="w-5 h-5 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-warning" />
+            <p className="text-xs sm:text-sm text-muted-foreground">IVA a Pagar (Neto)</p>
+            <p className="text-sm sm:text-2xl font-bold text-warning">{formatCurrency(totales.ivaAPagar)}</p>
+            <div className="text-xs text-muted-foreground mt-1 sm:mt-2 space-y-1 hidden sm:block">
               <div className="flex items-center justify-center gap-1">
                 <Plus className="w-3 h-3" />
                 <span>Débito: {formatCurrency(totales.ivaDebito)}</span>
@@ -233,13 +252,13 @@ export const SimulacionVentas = ({ simulacion, simulacionPorUnidad = [] }: Props
           </CardContent>
         </Card>
         
-        <Card className="text-center bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-          <CardContent className="pt-6">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2 text-success" />
-            <p className="text-sm text-muted-foreground">Ganancia Total</p>
-            <p className="text-2xl font-bold text-success">{formatCurrency(totales.ganancia)}</p>
+        <Card className="text-center bg-gradient-to-br from-success/10 to-success/5 border-success/20 lg:col-span-1 col-span-2">
+          <CardContent className="pt-3 sm:pt-6 pb-3 sm:pb-6 px-2 sm:px-6">
+            <TrendingUp className="w-5 h-5 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-success" />
+            <p className="text-xs sm:text-sm text-muted-foreground">Ganancia Total</p>
+            <p className="text-sm sm:text-2xl font-bold text-success">{formatCurrency(totales.ganancia)}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              % Gan Promedio: {((totales.ganancia / totales.costo) * 100).toFixed(1)}%
+              % Gan: {((totales.ganancia / totales.costo) * 100).toFixed(1)}%
             </p>
           </CardContent>
         </Card>
