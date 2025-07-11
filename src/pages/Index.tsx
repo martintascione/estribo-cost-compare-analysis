@@ -7,7 +7,6 @@ import { ConfiguracionVenta } from "@/components/ConfiguracionVenta";
 import { PreciosPorUnidad } from "@/components/PreciosPorUnidad";
 import { ComparacionPrecios } from "@/components/ComparacionPrecios";
 import { SimulacionVentas } from "@/components/SimulacionVentas";
-import { GeneradorRemitos } from "@/components/GeneradorRemitos";
 
 const Index = () => {
   const {
@@ -65,7 +64,7 @@ const Index = () => {
 
         {/* Tabs principales */}
         <Tabs defaultValue="configuracion" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 h-auto gap-1">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto gap-1">
             <TabsTrigger value="configuracion" className="flex-col gap-1 py-2 px-2 text-center">
               <span className="font-medium text-sm">Configuración</span>
               <span className="text-xs text-muted-foreground hidden sm:block">Datos de entrada</span>
@@ -77,10 +76,6 @@ const Index = () => {
             <TabsTrigger value="simulacion" className="flex-col gap-1 py-2 px-2 text-center">
               <span className="font-medium text-sm">Simulación</span>
               <span className="text-xs text-muted-foreground hidden sm:block">Ventas masivas</span>
-            </TabsTrigger>
-            <TabsTrigger value="remitos" className="flex-col gap-1 py-2 px-2 text-center">
-              <span className="font-medium text-sm">Generar Remito</span>
-              <span className="text-xs text-muted-foreground hidden sm:block">Facturación</span>
             </TabsTrigger>
           </TabsList>
 
@@ -129,16 +124,6 @@ const Index = () => {
             <SimulacionVentas 
               simulacion={simulacionVentas}
               simulacionPorUnidad={simulacionVentasPorUnidad}
-            />
-          </TabsContent>
-
-          {/* Tab de Generador de Remitos */}
-          <TabsContent value="remitos" className="space-y-6">
-            <GeneradorRemitos 
-              proveedores={proveedores}
-              estribos={estribos}
-              configuracion={configuracion}
-              preciosPorUnidad={preciosPorUnidad}
             />
           </TabsContent>
         </Tabs>
